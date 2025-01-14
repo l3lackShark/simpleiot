@@ -1,4 +1,4 @@
-module github.com/simpleiot/simpleiot
+module github.com/l3lackShark/simpleiot
 
 require (
 	github.com/Wifx/gonetworkmanager/v2 v2.1.0
