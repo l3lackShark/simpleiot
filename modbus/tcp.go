@@ -172,28 +172,34 @@ func (ts *TCPServer) Listen(errorCallback func(error),
 		}
 
 		ts.lock.Lock()
-		if len(ts.servers) < ts.maxClients {
-			transport := NewTCP(sock, 500*time.Millisecond, TransportServer)
-			server := NewServer(byte(ts.id), transport, ts.regs, ts.debug)
-			ts.servers = append(ts.servers, server)
-			go server.Listen(errorCallback,
-				changesCallback, func() {
-					// TCP server client has disconnected, remove from list
-					ts.lock.Lock()
-					for i := range ts.servers {
-						if ts.servers[i] == server {
-							ts.servers[i] = ts.servers[len(ts.servers)-1]
-							ts.servers = ts.servers[:len(ts.servers)-1]
-							break
-						}
-					}
-					ts.lock.Unlock()
-				})
-		} else {
-			log.Println("Modbus TCP server: warning reached max conn")
+		if len(ts.servers) > ts.maxClients {
+			log.Println("Modbus TCP server: warning reached max conn, closing previous connections...")
+			for _, s := range ts.servers {
+				s.Close()
+			}
 		}
+		ts.InitializeServer(sock, errorCallback, changesCallback)
 		ts.lock.Unlock()
 	}
+}
+
+func (ts *TCPServer) InitializeServer(sock net.Conn, errorCallback func(error), changesCallback func()) {
+	transport := NewTCP(sock, 500*time.Millisecond, TransportServer)
+	server := NewServer(byte(ts.id), transport, ts.regs, ts.debug)
+	ts.servers = append(ts.servers, server)
+	go server.Listen(errorCallback,
+		changesCallback, func() {
+			// TCP server client has disconnected, remove from list
+			ts.lock.Lock()
+			for i := range ts.servers {
+				if ts.servers[i] == server {
+					ts.servers[i] = ts.servers[len(ts.servers)-1]
+					ts.servers = ts.servers[:len(ts.servers)-1]
+					break
+				}
+			}
+			ts.lock.Unlock()
+		})
 }
 
 // Close stops the server and closes all connections
