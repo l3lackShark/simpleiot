@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	modbus "github.com/l3lackShark/simpleiot/modbus/types"
 	"github.com/simpleiot/simpleiot/test"
 )
 
@@ -48,7 +49,7 @@ func TestRtuSc2000Level(t *testing.T) {
 	regs.AddReg(10, 1)
 	_ = regs.WriteReg(10, 98)
 
-	_, resp, err := prompt.ProcessRequest(&regs)
+	_, resp, err := prompt.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 	if err != nil {
 		t.Fatal("error processing: ", err)
 	}
@@ -89,7 +90,7 @@ func TestRtuSc2000Coil(t *testing.T) {
 	regs.AddCoil(128)
 	_ = regs.WriteCoil(128, true)
 
-	_, resp, err := prompt.ProcessRequest(&regs)
+	_, resp, err := prompt.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 	if err != nil {
 		t.Fatal("error processing: ", err)
 	}

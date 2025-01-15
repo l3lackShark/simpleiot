@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	modbus "github.com/l3lackShark/simpleiot/modbus/types"
 )
 
 func TestPduReadCoils(t *testing.T) {
@@ -13,7 +14,7 @@ func TestPduReadCoils(t *testing.T) {
 
 	pdu := ReadCoils(128, 1)
 
-	_, resp, err := pdu.ProcessRequest(&regs)
+	_, resp, err := pdu.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 
 	if err != nil {
 		t.Errorf("Error processing request: %v", err)
@@ -41,7 +42,7 @@ func TestPduWriteSingleCoil(t *testing.T) {
 
 	pdu := WriteSingleCoil(128, false)
 
-	_, resp, err := pdu.ProcessRequest(&regs)
+	_, resp, err := pdu.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 
 	if err != nil {
 		t.Errorf("Error processing request: %v", err)
@@ -67,7 +68,7 @@ func TestPduWriteSingleCoilError(t *testing.T) {
 
 	pdu := WriteSingleCoil(64, false)
 
-	_, resp, err := pdu.ProcessRequest(&regs)
+	_, resp, err := pdu.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 
 	if err != nil {
 		t.Errorf("Error processing request: %v", err)
@@ -88,7 +89,7 @@ func TestPduReadHoldingRegs(t *testing.T) {
 
 	pdu := ReadHoldingRegs(8, 1)
 
-	_, resp, err := pdu.ProcessRequest(&regs)
+	_, resp, err := pdu.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 
 	if err != nil {
 		t.Fatal("Error processing request: ", err)
@@ -155,7 +156,7 @@ func TestProcessRequest(t *testing.T) {
 				FunctionCode: FunctionCode(test.in[0]),
 				Data:         test.in[1:],
 			}
-			_, resp, err := pdu.ProcessRequest(&regs)
+			_, resp, err := pdu.ProcessRequest(&regs, &modbus.ChangedRegisters{})
 
 			if err != nil {
 				t.Errorf("Error processing request: %v", err)

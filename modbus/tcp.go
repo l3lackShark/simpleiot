@@ -7,6 +7,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	types "github.com/l3lackShark/simpleiot/modbus/types"
 )
 
 // TCPADU defines an ADU for TCP packets
@@ -153,7 +155,7 @@ func NewTCPServer(id, maxClients int, port string, regs *Regs, debug int) (*TCPS
 // 1 - dump packets
 // 9 - dump raw data
 func (ts *TCPServer) Listen(errorCallback func(error),
-	changesCallback func(), done func()) {
+	changesCallback func(changedRegs *types.ChangedRegisters), done func()) {
 	for {
 		sock, err := ts.listener.Accept()
 		if err != nil {
@@ -183,7 +185,7 @@ func (ts *TCPServer) Listen(errorCallback func(error),
 	}
 }
 
-func (ts *TCPServer) InitializeServer(sock net.Conn, errorCallback func(error), changesCallback func()) {
+func (ts *TCPServer) InitializeServer(sock net.Conn, errorCallback func(error), changesCallback func(*types.ChangedRegisters)) {
 	transport := NewTCP(sock, 500*time.Millisecond, TransportServer)
 	server := NewServer(byte(ts.id), transport, ts.regs, ts.debug)
 	ts.servers = append(ts.servers, server)

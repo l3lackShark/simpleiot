@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	types "github.com/l3lackShark/simpleiot/modbus/types"
 	"github.com/simpleiot/simpleiot/test"
 )
 
@@ -35,7 +36,7 @@ func (p *PDU) handleError(err error) (bool, PDU, error) {
 // through the server interface argument.
 // This function returns any register changes, the modbus respose,
 // and any errors
-func (p *PDU) ProcessRequest(regs RegProvider) (bool, PDU, error) {
+func (p *PDU) ProcessRequest(regs RegProvider, changedRegs *types.ChangedRegisters) (bool, PDU, error) {
 	regsChanged := false
 	resp := PDU{}
 	resp.FunctionCode = p.FunctionCode
@@ -103,6 +104,11 @@ func (p *PDU) ProcessRequest(regs RegProvider) (bool, PDU, error) {
 		if err != nil {
 			return p.handleError(err)
 		}
+		changedRegs.Registers = append(changedRegs.Registers, types.ChangedRegister{
+			Type:    types.RegisterTypeCoil,
+			Address: address,
+			Value:   vBool,
+		})
 
 		regsChanged = true
 		resp.Data = p.Data
@@ -118,6 +124,12 @@ func (p *PDU) ProcessRequest(regs RegProvider) (bool, PDU, error) {
 			if err := regs.WriteCoil(int(address)+i, value); err != nil {
 				return p.handleError(err)
 			}
+			changedRegs.Registers = append(changedRegs.Registers, types.ChangedRegister{
+				Type:    types.RegisterTypeCoil,
+				Address: address + uint16(i),
+				Value:   value,
+			})
+
 		}
 		resp.Data = make([]byte, 4)
 		binary.BigEndian.PutUint16(resp.Data[:2], address)
@@ -133,6 +145,12 @@ func (p *PDU) ProcessRequest(regs RegProvider) (bool, PDU, error) {
 			return p.handleError(err)
 		}
 
+		changedRegs.Registers = append(changedRegs.Registers, types.ChangedRegister{
+			Type:    types.RegisterTypeInteger,
+			Address: address,
+			Value:   v,
+		})
+
 		resp = *p
 		regsChanged = true
 
@@ -147,6 +165,11 @@ func (p *PDU) ProcessRequest(regs RegProvider) (bool, PDU, error) {
 			if err := regs.WriteReg(int(address)+i, value); err != nil {
 				return p.handleError(err)
 			}
+			changedRegs.Registers = append(changedRegs.Registers, types.ChangedRegister{
+				Type:    types.RegisterTypeInteger,
+				Address: address + uint16(i),
+				Value:   value,
+			})
 		}
 		resp.Data = make([]byte, 4)
 		binary.BigEndian.PutUint16(resp.Data[:2], address)

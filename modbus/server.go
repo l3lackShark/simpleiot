@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	types "github.com/l3lackShark/simpleiot/modbus/types"
 	"github.com/simpleiot/simpleiot/test"
 )
 
@@ -47,7 +48,7 @@ func (s *Server) Close() error {
 // 1 - dump packets
 // 9 - dump raw data
 func (s *Server) Listen(errorCallback func(error),
-	changesCallback func(), done func()) {
+	changesCallback func(changedRegs *types.ChangedRegisters), done func()) {
 	for {
 		select {
 		case <-s.chDone:
@@ -113,10 +114,10 @@ func (s *Server) Listen(errorCallback func(error),
 		if s.debug >= 2 {
 			fmt.Println("Modbus server req: ", req)
 		}
-
-		regsChanged, resp, err := req.ProcessRequest(s.regs)
+		changedRegs := &types.ChangedRegisters{}
+		regsChanged, resp, err := req.ProcessRequest(s.regs, changedRegs)
 		if regsChanged {
-			changesCallback()
+			changesCallback(changedRegs)
 		}
 
 		if err != nil {
